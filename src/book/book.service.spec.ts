@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookService } from './book.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('BookService', () => {
   let service: BookService;
@@ -17,24 +18,22 @@ describe('BookService', () => {
   });
 
   it('should return a single book after create', () => {
-    const createBook = service.createBooks({
+    const createdBook = service.createBooks({
       cim: 'test',
       szerzo: 'test',
       kiadaseve: 2002,
     });
-    const book = service.getBook({
-      cim: createBook.cim,
-      szerzo: createBook.szerzo,
-    });
+    const book = service.getBook(createdBook.id);
     expect(book).toEqual({
       cim: 'test',
       szerzo: 'test',
       kiadaseve: 2002,
+      id: expect.any(String),
     });
   });
 
   it('should return undefined', () => {
-    const book = service.getBook({ cim: 'test', szerzo: 'test' });
+    const book = service.getBook('-1');
     expect(book).toBeUndefined();
   });
 
@@ -47,7 +46,12 @@ describe('BookService', () => {
       }); //act
 
       expect(service.getBooks()).toEqual([
-        { szerzo: 'test', cim: 'test', kiadaseve: 2002 },
+        {
+          szerzo: 'test',
+          cim: 'test',
+          kiadaseve: 2002,
+          id: expect.any(String),
+        },
       ]); //assert
     });
   });
@@ -60,23 +64,70 @@ describe('BookService', () => {
         kiadaseve: 2002,
       });
       service.createBooks({ cim: 'c', szerzo: 'test', kiadaseve: 2002 });
-      service.deleteBook(todoToDelete);
+      service.deleteBook(todoToDelete.id);
 
       expect(service.getBooks()).toEqual([
-        { cim: 'a', szerzo: 'test', kiadaseve: 2002 },
-        { cim: 'c', szerzo: 'test', kiadaseve: 2002 },
+        { cim: 'a', szerzo: 'test', kiadaseve: 2002, id: expect.any(String) },
+        { cim: 'c', szerzo: 'test', kiadaseve: 2002, id: expect.any(String) },
       ]);
     });
 
     it("should not delete anything if it todo doesn't exist", () => {
       service.createBooks({ cim: 'test', szerzo: 'test', kiadaseve: 13 });
-      service.deleteBook({ cim: 'test', szerzo: 'test', kiadaseve: -12 });
+      service.deleteBook('-1');
 
       expect(service.getBooks()).toEqual([
-        { cim: 'test', szerzo: 'test', kiadaseve: 13 },
+        { cim: 'test', szerzo: 'test', kiadaseve: 13, id: expect.any(String) },
       ]);
     });
   });
+  describe('update', () => {
+    it('should return updated todo after update', () => {
+      const book = service.createBooks({
+        cim: 'test',
+        szerzo: 'test',
+        kiadaseve: 2000,
+      });
+      service.updateBook(book.id, {
+        cim: 'test2',
+        szerzo: 'test',
+        kiadaseve: 2000,
+      });
+      expect(service.getBook(book.id)).toEqual({
+        cim: 'test2',
+        szerzo: 'test',
+        kiadaseve: 2000,
+        id: book.id,
+      });
+    });
+  });
 
-  it('should ', () => {});
+  it('should return the updated todo with getTodo after update', () => {
+    const book = service.createBooks({
+      cim: 'test',
+      szerzo: 'test',
+      kiadaseve: 2002,
+    });
+    const newBook = service.updateBook(book.id, {
+      szerzo: 'test2',
+      cim: 'test2',
+      kiadaseve: 2000,
+    });
+    expect(newBook).toEqual({
+      id: book.id,
+      szerzo: 'test2',
+      cim: 'test2',
+      kiadaseve: 2000,
+    });
+  });
+
+  it('should return the updated todo after update', () => {
+    expect(() => {
+      service.updateBook('-1', {
+        szerzo: 'test2',
+        cim: 'test2',
+        kiadaseve: 2000,
+      });
+    }).toThrow(NotFoundException);
+  });
 });

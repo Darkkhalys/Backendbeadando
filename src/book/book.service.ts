@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Book } from './book.modul';
 
-export type CreateBookInput = Omit<Book, 'kiadaseve'>;
+export type CreateBookInput = Omit<Book, 'id'>;
 @Injectable()
 export class BookService {
   private readonly books: Book[] = [];
@@ -10,26 +10,43 @@ export class BookService {
     return this.books;
   }
 
-  createBooks(bookInput: Book) {
-    const books = { ...bookInput };
+  createBooks(bookInput: CreateBookInput) {
+    let todoid: number;
+    if (this.books.length === 0) {
+      todoid = 1;
+    } else {
+      todoid = this.books.length + 1;
+    }
+    const books = { ...bookInput, id: todoid.toString() };
     this.books.push(books);
     return books;
   }
-  getBook(bookSearch: CreateBookInput) {
+  getBook(bookSearch: string) {
     for (const book1 of this.books) {
-      if (book1.cim === bookSearch.cim && book1.szerzo === bookSearch.szerzo) {
+      if (book1.id === bookSearch) {
         return book1;
       }
     }
     return undefined;
   }
-  deleteBook(bookDelete: Book) {
-    const index = this.books.findIndex((book) => book === bookDelete);
+  deleteBook(id: string) {
+    const index = this.books.findIndex((book) => book.id === id);
     console.log(index);
-    if (index === -1) {
+    if (index === undefined) {
       return;
     }
     this.books.splice(index, 1);
     return this.books;
+  }
+  updateBook(id: string, updateinput: CreateBookInput) {
+    for (const book of this.books) {
+      if (book.id === id) {
+        book.cim = updateinput.cim;
+        book.szerzo = updateinput.szerzo;
+        book.kiadaseve = updateinput.kiadaseve;
+        return book;
+      }
+    }
+    throw new NotFoundException();
   }
 }

@@ -1,0 +1,24 @@
+POST http://localhost:3000/book/create
+Content-Type:application/json
+
+{
+    "cim": "Történelem tankönyv",
+    "szerzo": "Egressy Péter",
+    "kiadaseve": 2003
+}
+
+###
+PUT http://localhost:3000/book/update/6
+Content-Type: application/json
+
+{
+  "szerzo": "Egressy Péter",
+  "cim": "Történelem",
+  "kiadaseve": 2000
+}
+###
+
+DELETE http://localhost:3000/book/delete/3
+
+
+
